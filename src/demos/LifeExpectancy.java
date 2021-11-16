@@ -75,7 +75,7 @@ public class LifeExpectancy extends PApplet {
 
 	//Helper method to load life expectancy data from file
 	private Map<String, Float> loadLifeExpectancyFromCSV(String fileName) {
-		Map<String, Float> lifeExpMap = new HashMap<String, Float>();
+		Map<String, Float> lifeExpMap = new HashMap<>();
 
 		String[] rows = loadStrings(fileName);
 		for (String row : rows) {
