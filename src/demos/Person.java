@@ -26,7 +26,9 @@ public class Person
 
 	public void status( int hr )
 	{
-		if ( this.isAsleep( hr ) )
+		// Does not matter it is this.isAsleep() or isAsleep()
+		// Dynamic binding
+		if ( isAsleep( hr ) )
 			System.out.println( "Now offline: " + this );
 	    else
 	    	System.out.println( "Now online: " + this );
