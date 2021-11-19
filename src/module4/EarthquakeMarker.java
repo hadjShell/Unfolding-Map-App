@@ -7,7 +7,7 @@ import processing.core.PGraphics;
 /** Implements a visual marker for earthquakes on an earthquake map
  * 
  * @author UC San Diego Intermediate Software Development MOOC team
- * @author Your name here
+ * @author Hadjshell
  *
  */
 public abstract class EarthquakeMarker extends SimplePointMarker
@@ -35,8 +35,6 @@ public abstract class EarthquakeMarker extends SimplePointMarker
 	public static final float THRESHOLD_INTERMEDIATE = 70;
 	/** Greater than or equal to this threshold is a deep depth */
 	public static final float THRESHOLD_DEEP = 300;
-
-	// ADD constants for colors
 
 	
 	// abstract method implemented in derived classes
@@ -67,8 +65,12 @@ public abstract class EarthquakeMarker extends SimplePointMarker
 		// call abstract method implemented in child class to draw marker shape
 		drawEarthquake(pg, x, y);
 		
-		// OPTIONAL TODO: draw X over marker if within past day		
-		
+		// OPTIONAL TODO: draw X over marker if within past day
+		if(getStringProperty("age").equals("Past Day")) {
+			pg.fill(0, 0, 0);
+			pg.line(x-radius, y-radius, x+radius, y+radius);
+			pg.line(x-radius, y+radius, x+radius, y-radius);
+		}
 		// reset to previous styling
 		pg.popStyle();
 		
@@ -81,6 +83,17 @@ public abstract class EarthquakeMarker extends SimplePointMarker
 	// You might find the getters below helpful.
 	private void colorDetermine(PGraphics pg) {
 		//TODO: Implement this method
+
+		// ADD constants for colors
+		int yellow = pg.color(255, 255, 0);
+		int blue = pg.color(0, 0, 255);
+		int red = pg.color(255, 0, 0);
+		if(getDepth() < THRESHOLD_INTERMEDIATE)
+			pg.fill(yellow);
+		else if(getDepth() < THRESHOLD_DEEP)
+			pg.fill(blue);
+		else
+			pg.fill(red);
 	}
 	
 	
