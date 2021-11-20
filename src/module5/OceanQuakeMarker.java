@@ -1,7 +1,14 @@
 package module5;
 
+import de.fhpotsdam.unfolding.data.Feature;
+import de.fhpotsdam.unfolding.data.GeoJSONReader;
 import de.fhpotsdam.unfolding.data.PointFeature;
+import de.fhpotsdam.unfolding.marker.Marker;
 import processing.core.PGraphics;
+
+import java.util.ArrayList;
+import java.util.List;
+
 
 /** Implements a visual marker for ocean earthquakes on an earthquake map
  * 
@@ -10,7 +17,7 @@ import processing.core.PGraphics;
  *
  */
 public class OceanQuakeMarker extends EarthquakeMarker {
-	
+
 	public OceanQuakeMarker(PointFeature quake) {
 		super(quake);
 		

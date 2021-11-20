@@ -2,17 +2,20 @@ package module5;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.lang.Math;
 
 import de.fhpotsdam.unfolding.UnfoldingMap;
 import de.fhpotsdam.unfolding.data.Feature;
 import de.fhpotsdam.unfolding.data.GeoJSONReader;
 import de.fhpotsdam.unfolding.data.PointFeature;
 import de.fhpotsdam.unfolding.geo.Location;
+import de.fhpotsdam.unfolding.marker.AbstractMarker;
 import de.fhpotsdam.unfolding.marker.AbstractShapeMarker;
 import de.fhpotsdam.unfolding.marker.Marker;
 import de.fhpotsdam.unfolding.marker.MultiMarker;
 import de.fhpotsdam.unfolding.providers.Google;
 import de.fhpotsdam.unfolding.providers.MBTilesMapProvider;
+import de.fhpotsdam.unfolding.providers.Microsoft;
 import de.fhpotsdam.unfolding.utils.MapUtils;
 import parsing.ParseFeed;
 import processing.core.PApplet;
@@ -20,7 +23,7 @@ import processing.core.PApplet;
 /** EarthquakeCityMap
  * An application with an interactive map displaying earthquake data.
  * Author: UC San Diego Intermediate Software Development MOOC team
- * @author Your name here
+ * @author Hadjshell
  * Date: July 17, 2015
  * */
 public class EarthquakeCityMap extends PApplet {
@@ -70,7 +73,7 @@ public class EarthquakeCityMap extends PApplet {
 		    earthquakesURL = "2.5_week.atom";  // The same feed, but saved August 7, 2015
 		}
 		else {
-			map = new UnfoldingMap(this, 200, 50, 650, 600, new Google.GoogleMapProvider());
+			map = new UnfoldingMap(this, 200, 50, 650, 600, new Microsoft.AerialProvider());
 			// IF YOU WANT TO TEST WITH A LOCAL FILE, uncomment the next line
 		    //earthquakesURL = "2.5_week.atom";
 		}
@@ -105,7 +108,7 @@ public class EarthquakeCityMap extends PApplet {
 	    }
 
 	    // could be used for debugging
-	    printQuakes();
+	    // printQuakes();
 	 		
 	    // (3) Add markers to map
 	    //     NOTE: Country markers are not added to the map.  They are used
@@ -117,9 +120,21 @@ public class EarthquakeCityMap extends PApplet {
 	
 	
 	public void draw() {
-		background(0);
+		background(255);
 		map.draw();
 		addKey();
+		// If the lastClicked marker is OceanQuakeMarker,
+		// lines are drawn between this marker and all cities within its threat circle
+		// Because the lines are not the field of the map, so they have to be update in the draw() method
+		if(lastClicked instanceof OceanQuakeMarker) {
+			for(Marker m : cityMarkers) {
+				if(!m.isHidden()) {
+					strokeWeight(4);
+					line(lastClicked.getScreenPosition(map).x, lastClicked.getScreenPosition(map).y,
+							((CommonMarker)m).getScreenPosition(map).x, ((CommonMarker)m).getScreenPosition(map).y);
+				}
+			}
+		}
 		
 	}
 	
@@ -146,6 +161,13 @@ public class EarthquakeCityMap extends PApplet {
 	private void selectMarkerIfHover(List<Marker> markers)
 	{
 		// TODO: Implement this method
+		for (Marker m : markers) {
+			if(m.isInside(map, mouseX, mouseY) && lastSelected == null) {
+				lastSelected = (CommonMarker) m;
+				lastSelected.setSelected(true);
+				break;
+			}
+		}
 	}
 	
 	/** The event handler for mouse clicks
@@ -159,9 +181,28 @@ public class EarthquakeCityMap extends PApplet {
 		// TODO: Implement this method
 		// Hint: You probably want a helper method or two to keep this code
 		// from getting too long/disorganized
+		if(lastClicked != null) {
+			lastClicked.setClicked(false);
+			lastClicked = null;
+			unhideMarkers();
+		}
+		else {
+			clickMarkerIfClicked(quakeMarkers);
+			clickMarkerIfClicked(cityMarkers);
+			hideIrrelevantMarkers(lastClicked);
+		}
 	}
-	
-	
+
+	private void clickMarkerIfClicked(List<Marker> markers) {
+		for (Marker m : markers) {
+			if(m.isInside(map, mouseX, mouseY) && lastClicked == null) {
+				lastClicked = (CommonMarker) m;
+				lastClicked.setClicked(true);
+				break;
+			}
+		}
+	}
+
 	// loop over and unhide all markers
 	private void unhideMarkers() {
 		for(Marker marker : quakeMarkers) {
@@ -170,6 +211,40 @@ public class EarthquakeCityMap extends PApplet {
 			
 		for(Marker marker : cityMarkers) {
 			marker.setHidden(false);
+		}
+	}
+
+	// When an earthquake’s marker is selected,
+	// all cities within the threat circle of this earthquake are displayed on the map
+	// and all other cities and earthquakes are hidden.
+	// When a city’s marker is selected,
+	// all earthquakes which contain that city in their threat circle are displayed on the map
+	// and all other cities and earthquakes are hidden.
+	private void hideIrrelevantMarkers(CommonMarker clicked) {
+		if(clicked instanceof EarthquakeMarker) {
+			for(Marker marker : quakeMarkers) {
+				marker.setHidden(true);
+			}
+			clicked.setHidden(false);
+			for(Marker marker : cityMarkers) {
+				// distance with the clicked marker
+				double distance = marker.getDistanceTo(clicked.getLocation());
+				if(distance > ((EarthquakeMarker)clicked).threatCircle())
+					marker.setHidden(true);
+			}
+		}
+
+		if(clicked instanceof CityMarker) {
+			for(Marker marker : quakeMarkers) {
+				// distance with the clicked marker
+				double distance = marker.getDistanceTo(clicked.getLocation());
+				if(distance > ((EarthquakeMarker) marker).threatCircle())
+					marker.setHidden(true);
+			}
+			for(Marker marker : cityMarkers) {
+				marker.setHidden(true);
+			}
+			clicked.setHidden(false);
 		}
 	}
 	
