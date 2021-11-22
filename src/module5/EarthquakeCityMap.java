@@ -26,7 +26,7 @@ import processing.core.PApplet;
  * An application with an interactive map displaying earthquake data.
  * Author: UC San Diego Intermediate Software Development MOOC team
  * @author Hadjshell
- * Date: July 17, 2015
+ * Date: 22/11/2021
  * */
 public class EarthquakeCityMap extends PApplet {
 	
@@ -59,11 +59,10 @@ public class EarthquakeCityMap extends PApplet {
 	private List<Marker> cityMarkers;
 	// Markers for each earthquake
 	private List<Marker> quakeMarkers;
-
 	// A List of country markers
 	private List<Marker> countryMarkers;
 	
-	// NEW IN MODULE 5
+	// Markers used for user events
 	private CommonMarker lastSelected;
 	private CommonMarker lastClicked;
 	
@@ -110,7 +109,7 @@ public class EarthquakeCityMap extends PApplet {
 	    }
 
 	    // could be used for debugging
-	    // printQuakes();
+	    printQuakes();
 	 		
 	    // (3) Add markers to map
 	    //     NOTE: Country markers are not added to the map.  They are used
@@ -125,6 +124,7 @@ public class EarthquakeCityMap extends PApplet {
 		background(255);
 		map.draw();
 		addKey();
+
 		// If the lastClicked marker is OceanQuakeMarker,
 		// lines are drawn between this marker and all cities within its threat circle
 		// Because the lines are not the field of the map, so they have to be update in the draw() method
@@ -136,6 +136,25 @@ public class EarthquakeCityMap extends PApplet {
 							((CommonMarker)m).getScreenPosition(map).x, ((CommonMarker)m).getScreenPosition(map).y);
 				}
 			}
+		}
+
+		// When clicking on a city, display a popup menu
+		// which displays a count for the number of nearby earthquakes (within threatCircle) the average magnitude
+		if(lastClicked instanceof CityMarker) {
+			int numOfThreat = 0;
+			float sumMagnitude = 0.0f;
+			float avgMagnitude;
+
+			for (Marker em : quakeMarkers) {
+				if(!em.isHidden()) {
+					sumMagnitude += ((EarthquakeMarker) em).getMagnitude();
+					numOfThreat++;
+				}
+			}
+
+			// keep one decimal place
+			avgMagnitude = (float)(Math.round(sumMagnitude/numOfThreat*10))/10;
+			addMenu(numOfThreat, avgMagnitude);
 		}
 		
 	}
@@ -162,7 +181,6 @@ public class EarthquakeCityMap extends PApplet {
 	// 
 	private void selectMarkerIfHover(List<Marker> markers)
 	{
-		// TODO: Implement this method
 		for (Marker m : markers) {
 			if(m.isInside(map, mouseX, mouseY) && lastSelected == null) {
 				lastSelected = (CommonMarker) m;
@@ -180,7 +198,6 @@ public class EarthquakeCityMap extends PApplet {
 	@Override
 	public void mouseClicked()
 	{
-		// TODO: Implement this method
 		// Hint: You probably want a helper method or two to keep this code
 		// from getting too long/disorganized
 		if(lastClicked != null) {
@@ -189,13 +206,13 @@ public class EarthquakeCityMap extends PApplet {
 			unhideMarkers();
 		}
 		else {
-			clickMarkerIfClicked(quakeMarkers);
-			clickMarkerIfClicked(cityMarkers);
+			clickMarker(quakeMarkers);
+			clickMarker(cityMarkers);
 			hideIrrelevantMarkers(lastClicked);
 		}
 	}
 
-	private void clickMarkerIfClicked(List<Marker> markers) {
+	private void clickMarker(List<Marker> markers) {
 		for (Marker m : markers) {
 			if(m.isInside(map, mouseX, mouseY) && lastClicked == null) {
 				lastClicked = (CommonMarker) m;
@@ -223,6 +240,7 @@ public class EarthquakeCityMap extends PApplet {
 	// all earthquakes which contain that city in their threat circle are displayed on the map
 	// and all other cities and earthquakes are hidden.
 	private void hideIrrelevantMarkers(CommonMarker clicked) {
+
 		if(clicked instanceof EarthquakeMarker) {
 			for(Marker marker : quakeMarkers) {
 				marker.setHidden(true);
@@ -247,6 +265,7 @@ public class EarthquakeCityMap extends PApplet {
 				marker.setHidden(true);
 			}
 			clicked.setHidden(false);
+
 		}
 	}
 	
@@ -313,25 +332,27 @@ public class EarthquakeCityMap extends PApplet {
 			
 	}
 
-	
-	// Checks whether this quake occurred on land.  If it did, it sets the 
-	// "country" property of its PointFeature to the country where it occurred
-	// and returns true.  Notice that the helper method isInCountry will
-	// set this "country" property already.  Otherwise it returns false.	
-	private boolean isLand(PointFeature earthquake) {
-		
-		// IMPLEMENT THIS: loop over all countries to check if location is in any of them
-		// If it is, add 1 to the entry in countryQuakes corresponding to this country.
-		for (Marker country : countryMarkers) {
-			if (isInCountry(earthquake, country)) {
-				return true;
-			}
-		}
-		
-		// not inside any country
-		return false;
+	// helper method to draw popup menu in GUI
+	private void addMenu(int numOfNearbyQuakes, float avgMagnitude) {
+		fill(255, 250, 240);
+
+		int xbase = 25;
+		int ybase = 350;
+
+		rect(xbase, ybase, 150, 100);
+
+		fill(0);
+		textAlign(LEFT, CENTER);
+		textSize(12);
+		text("Nearby earthquakes: " + numOfNearbyQuakes, xbase+10, ybase+25);
+
+		fill(0);
+		textAlign(LEFT, CENTER);
+		textSize(12);
+		text("Average magnitude: " + avgMagnitude, xbase+10, ybase+50);
+
 	}
-	
+
 	// prints countries with number of earthquakes
 	private void printQuakes() {
 		// Initial a map represent the number of quakes by different regions
@@ -343,7 +364,7 @@ public class EarthquakeCityMap extends PApplet {
 
 		// Set the map
 		for (Marker m :quakeMarkers) {
-			module4.EarthquakeMarker em = (module4.EarthquakeMarker) m;
+			EarthquakeMarker em = (EarthquakeMarker) m;
 			String country = em.getStringProperty("country");
 			if(em.isOnLand()) {
 				quakeNumByRegion.put(country, quakeNumByRegion.get(country) + 1);
@@ -364,7 +385,24 @@ public class EarthquakeCityMap extends PApplet {
 		System.out.println("Ocean Quakes: " + quakeNumByRegion.get("Ocean Quakes"));
 	}
 
-	
+	// Checks whether this quake occurred on land.  If it did, it sets the
+	// "country" property of its PointFeature to the country where it occurred
+	// and returns true.  Notice that the helper method isInCountry will
+	// set this "country" property already.  Otherwise it returns false.
+	private boolean isLand(PointFeature earthquake) {
+
+		// IMPLEMENT THIS: loop over all countries to check if location is in any of them
+		// If it is, add 1 to the entry in countryQuakes corresponding to this country.
+		for (Marker country : countryMarkers) {
+			if (isInCountry(earthquake, country)) {
+				return true;
+			}
+		}
+
+		// not inside any country
+		return false;
+	}
+
 	// helper method to test whether a given earthquake is in a given country
 	// This will also add the country property to the properties of the earthquake feature if 
 	// it's in one of the countries.
