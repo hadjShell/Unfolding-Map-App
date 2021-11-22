@@ -1,8 +1,10 @@
 package module5;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.lang.Math;
+import java.util.Map;
 
 import de.fhpotsdam.unfolding.UnfoldingMap;
 import de.fhpotsdam.unfolding.data.Feature;
@@ -312,7 +314,6 @@ public class EarthquakeCityMap extends PApplet {
 	}
 
 	
-	
 	// Checks whether this quake occurred on land.  If it did, it sets the 
 	// "country" property of its PointFeature to the country where it occurred
 	// and returns true.  Notice that the helper method isInCountry will
@@ -333,28 +334,36 @@ public class EarthquakeCityMap extends PApplet {
 	
 	// prints countries with number of earthquakes
 	private void printQuakes() {
-		int totalWaterQuakes = quakeMarkers.size();
-		for (Marker country : countryMarkers) {
-			String countryName = country.getStringProperty("name");
-			int numQuakes = 0;
-			for (Marker marker : quakeMarkers)
-			{
-				EarthquakeMarker eqMarker = (EarthquakeMarker)marker;
-				if (eqMarker.isOnLand()) {
-					if (countryName.equals(eqMarker.getStringProperty("country"))) {
-						numQuakes++;
-					}
-				}
+		// Initial a map represent the number of quakes by different regions
+		Map<String, Integer> quakeNumByRegion = new HashMap<>();
+		for (Marker cm : countryMarkers) {
+			quakeNumByRegion.put(cm.getStringProperty("name"), 0);
+		}
+		quakeNumByRegion.put("Ocean Quakes", 0);
+
+		// Set the map
+		for (Marker m :quakeMarkers) {
+			module4.EarthquakeMarker em = (module4.EarthquakeMarker) m;
+			String country = em.getStringProperty("country");
+			if(em.isOnLand()) {
+				quakeNumByRegion.put(country, quakeNumByRegion.get(country) + 1);
 			}
-			if (numQuakes > 0) {
-				totalWaterQuakes -= numQuakes;
-				System.out.println(countryName + ": " + numQuakes);
+			else {
+				quakeNumByRegion.put("Ocean Quakes", quakeNumByRegion.get("Ocean Quakes") + 1);
 			}
 		}
-		System.out.println("OCEAN QUAKES: " + totalWaterQuakes);
+
+		// Print the map
+		for (String country : quakeNumByRegion.keySet()) {
+			if(country != "Ocean Quakes") {
+				int num = quakeNumByRegion.get(country);
+				if (num != 0)
+					System.out.println(country + ": " + num);
+			}
+		}
+		System.out.println("Ocean Quakes: " + quakeNumByRegion.get("Ocean Quakes"));
 	}
-	
-	
+
 	
 	// helper method to test whether a given earthquake is in a given country
 	// This will also add the country property to the properties of the earthquake feature if 

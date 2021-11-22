@@ -2,6 +2,7 @@ package module6;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import de.fhpotsdam.unfolding.UnfoldingMap;
@@ -14,6 +15,7 @@ import de.fhpotsdam.unfolding.marker.Marker;
 import de.fhpotsdam.unfolding.marker.MultiMarker;
 import de.fhpotsdam.unfolding.providers.Google;
 import de.fhpotsdam.unfolding.providers.MBTilesMapProvider;
+import de.fhpotsdam.unfolding.providers.Microsoft;
 import de.fhpotsdam.unfolding.utils.MapUtils;
 import parsing.ParseFeed;
 import processing.core.PApplet;
@@ -21,7 +23,7 @@ import processing.core.PApplet;
 /** EarthquakeCityMap
  * An application with an interactive map displaying earthquake data.
  * Author: UC San Diego Intermediate Software Development MOOC team
- * @author Your name here
+ * @author Hadjshell
  * Date: July 17, 2015
  * */
 public class EarthquakeCityMap extends PApplet {
@@ -44,8 +46,9 @@ public class EarthquakeCityMap extends PApplet {
 	
 
 	//feed with magnitude 2.5+ Earthquakes
-	private String earthquakesURL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.atom";
-	
+	// private String earthquakesURL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.atom";
+	private String earthquakesURL = "quiz2.atom";
+
 	// The files containing city names and info and country names and info
 	private String cityFile = "city-data.json";
 	private String countryFile = "countries.geo.json";
@@ -73,7 +76,7 @@ public class EarthquakeCityMap extends PApplet {
 		    earthquakesURL = "2.5_week.atom";  // The same feed, but saved August 7, 2015
 		}
 		else {
-			map = new UnfoldingMap(this, 200, 50, 650, 600, new Google.GoogleMapProvider());
+			map = new UnfoldingMap(this, 200, 50, 650, 600, new Microsoft.AerialProvider());
 			// IF YOU WANT TO TEST WITH A LOCAL FILE, uncomment the next line
 		    //earthquakesURL = "2.5_week.atom";
 		}
@@ -116,7 +119,10 @@ public class EarthquakeCityMap extends PApplet {
 	    }
 
 	    // could be used for debugging
-	    printQuakes();
+	    // printQuakes();
+
+		// check module 6 requirement
+		sortAndPrint(20);
 	 		
 	    // (3) Add markers to map
 	    //     NOTE: Country markers are not added to the map.  They are used
@@ -374,8 +380,26 @@ public class EarthquakeCityMap extends PApplet {
 		System.out.println("OCEAN QUAKES: " + totalWaterQuakes);
 	}
 	
-	
-	
+
+	// sort the array of earthquake markers in reverse order of their magnitude (highest to lowest)
+	// and then print out the top numToPrint earthquakes
+	// if numToPrint is larger than the numbers of markers, print all
+	private void sortAndPrint(int numToPrint) {
+		EarthquakeMarker[] arrQuakeMarkers = new EarthquakeMarker[quakeMarkers.size()];
+		quakeMarkers.toArray(arrQuakeMarkers);
+		// reverse order
+		Arrays.sort(arrQuakeMarkers);
+		if(numToPrint > arrQuakeMarkers.length) {
+			System.out.println(arrQuakeMarkers);
+		}
+		else {
+			for (int i = 0; i < numToPrint; i++) {
+				System.out.println(arrQuakeMarkers[i]);
+			}
+		}
+	}
+
+
 	// helper method to test whether a given earthquake is in a given country
 	// This will also add the country property to the properties of the earthquake feature if 
 	// it's in one of the countries.
